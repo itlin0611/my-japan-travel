@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>旅日足跡紀錄器 - 雲端同步版</title>
+    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -48,14 +51,14 @@
             { id: '3m', category: '日本三大茅草屋聚落', icon: '🌾', items: ['白川鄉合掌村', '五箇山合掌村', '美山茅草屋之里', '大內宿'] },
             { id: '12t', category: '現存十二天守', icon: '🏯', items: ['弘前城', '松本城', '丸岡城', '犬山城', '彥根城', '姬路城', '松江城', '備中松山城', '丸龜城', '伊予松山城', '宇和島城', '高知城'] },
             { id: 'wh', category: '日本世界遺產', icon: '🏛️', items: ['古都京都的文化財', '姬路城', '白川鄉合掌村', '嚴島神社', '古都奈良的文化財', '日光的神社與寺院', '富士山', '法隆寺地區的佛教古蹟', '屋久島', '白神山地', '廣島和平紀念館', '紀伊山地的靈場參拜道', '知床半島', '石見銀山遺跡', '平泉', '小笠原群島', '富岡製絲廠', '明治日本產業革命遺產', '國立西洋美術館', '沖之島', '長崎地區隱忍基督徒遺址', '百舌鳥・古市古墳群', '北海道及北東北的繩紋遺跡', '佐渡島的金山']},
-            { id: 'c100_1', category: '日本百大名城 (01-34 北日本/東日本)', icon: '⚔️', items: [
-                '根室半島砦跡群', '五稜郭', '松前城', '根城', '盛岡城', '多賀城', '仙台城', '久保田城', '山形城', '二本松城', '會津若松城', '白河小峰城', '水戶城', '足利氏館', '箕輪城', '金山城', '鉢形城', '川越城', '佐倉城', '江戶城', '八王子城', '小田原城', '武田氏館', '甲府城', '松代城', '上田城', '小諸城', '春日山城', '新發田城', '高岡城', '七尾城', '一乘谷城', '丸岡城'
+            { id: 'c100_1', category: '日本百大名城 (01-34)', icon: '⚔️', items: [
+                '根室半島砦跡群', '五稜郭', '松前城', '弘前城', '根城', '盛岡城', '多賀城', '仙台城', '久保田城', '山形城', '二本松城', '會津若松城', '白河小峰城', '水戶城', '足利氏館', '箕輪城', '金山城', '鉢形城', '川越城', '佐倉城', '江戶城', '八王子城', '小田原城', '武田氏館', '甲府城', '松代城', '上田城', '小諸城', '春日山城', '新發田城', '高岡城', '七尾城', '一乘谷城', '丸岡城'
             ]},
-            { id: 'c100_2', category: '日本百大名城 (35-67 中部/近畿/中國)', icon: '⚔️', items: [
-                '金澤城', '大野城', '福井城', '岩村城', '岐阜城', '犬山城', '名古屋城', '岡崎城', '長篠城', '伊賀上野城', '松阪城', '桑名城', '小谷城', '彥根城', '安土城', '觀音寺城', '二条城', '大阪城', '千早城', '竹田城', '篠山城', '明石城', '高取城', '和歌山城', '赤穗城', '姬路城', '鳥取城', '松江城', '月山富田城', '津和野城', '岡山城', '津山城', '備中松山城', '福山城', '吉田郡山城', '廣島城', '岩國城', '萩城'
+            { id: 'c100_2', category: '日本百大名城 (35-67)', icon: '⚔️', items: [
+                '金澤城', '越前大野城', '福井城', '岩村城', '岐阜城', '山中城', '駿府城', '掛川城', '濱松城', '名古屋城', '岡崎城', '長篠城', '伊賀上野城', '松阪城', '桑名城', '彥根城', '安土城', '觀音寺城', '二条城', '大阪城', '千早城', '竹田城', '篠山城', '明石城', '高取城', '和歌山城', '赤穗城', '姬路城', '鳥取城', '松江城', '月山富田城', '津和野城', '岡山城'
             ]},
-            { id: 'c100_3', category: '日本百大名城 (68-100 四國/九州/沖繩)', icon: '⚔️', items: [
-                '德島城', '一宮城', '高松城', '丸龜城', '今治城', '湯築城', '伊予松山城', '大洲城', '宇和島城', '高知城', '福岡城', '大野城(九州)', '名護屋城', '吉野里遺跡', '佐賀城', '平戶城', '島原城', '熊本城', '人吉城', '大分府內城', '岡城', '飫肥城', '鹿兒島城', '首里城', '今歸仁城', '中城城'
+            { id: 'c100_3', category: '日本百大名城 (68-100)', icon: '⚔️', items: [
+                '津山城', '備中松山城', '福山城', '吉田郡山城', '廣島城', '岩國城', '萩城', '德島城', '一宮城', '高松城', '丸龜城', '今治城', '湯築城', '伊予松山城', '大洲城', '宇和島城', '高知城', '福岡城', '大野城(九州)', '名護屋城', '吉野里遺跡', '佐賀城', '平戶城', '島原城', '熊本城', '人吉城', '大分府內城', '岡城', '飫肥城', '鹿兒島城', '首里城', '今歸仁城', '中城城'
             ]},
             { id: 'land_east', category: '人氣地標 (東日本)', icon: '🗼', items: [
                 '東京鐵塔', '晴空塔', '淺草寺', '明治神宮', '澀谷十字路口', '台場鋼彈', '鎌倉大佛', '江之島', '蘆之湖', '箱根神社', '忍野八海', '新倉山淺間公園', '國營常陸海濱公園', '日光東照宮', '華嚴瀑布', '草津溫泉湯畑', '黑部立山', '地獄谷野猿公苑', '上高地', '飛驒高山古街'
@@ -160,7 +163,7 @@
                         <header className="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                 <div>
-                                    <h1 className="text-3xl font-black text-red-600 flex items-center gap-2">
+                                    <h1 className="text-3xl font-black text-red-600 flex items-center justify-center md:justify-start gap-2">
                                         <Icon name="MapPin" className="text-red-600" size={32} /> 旅日足跡
                                     </h1>
                                     <button onClick={() => setShowSyncPanel(!showSyncPanel)} className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500">
@@ -174,7 +177,7 @@
                                 </div>
                             </div>
                             {showSyncPanel && (
-                                <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-300">
                                     <input type="password" placeholder="GitHub Token" className="w-full p-2 text-xs rounded-lg border outline-none" value={syncConfig.token} onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})} />
                                     <input type="text" placeholder="Repo (帳號/名稱)" className="w-full p-2 text-xs rounded-lg border outline-none" value={syncConfig.repo} onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})} />
                                     <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full">儲存並同步資料</button>
@@ -182,7 +185,7 @@
                             )}
                             <div className="mt-6 relative">
                                 <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                                <input type="text" placeholder="搜尋景點名稱..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500 transition-all" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                <input type="text" placeholder="搜尋景點名稱..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                             </div>
                         </header>
 
@@ -216,7 +219,7 @@
                                                             <div className="flex justify-between items-center">
                                                                 <div className="flex items-center gap-3">
                                                                     <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
-                                                                    <span className={`font-bold ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
+                                                                    <span className={`font-bold transition-colors ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
                                                                 </div>
                                                                 {record && <button onClick={() => setEditingItem(editingItem === item ? null : item)} className="text-xs text-slate-400 underline font-medium">{editingItem === item ? '收起' : '編輯'}</button>}
                                                             </div>
