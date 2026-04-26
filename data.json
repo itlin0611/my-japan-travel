@@ -145,8 +145,14 @@
   },
   "水戶城": {
     "visited": true,
-    "date": "2026-02-26",
+    "date": "2026-02-03",
     "imageUrl": "https://i.postimg.cc/3xPf6fCL/shui-hu-cheng.jpg",
+    "albumUrl": ""
+  },
+  "足利氏館": {
+    "visited": true,
+    "date": "2026-04-26",
+    "imageUrl": "",
     "albumUrl": ""
   }
 }
