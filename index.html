@@ -13,8 +13,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
-        .hide-scroll::-webkit-scrollbar { display: none; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        /* 避免圖示在 Tailwind 載入前爆炸的後備樣式 */
+        svg { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
@@ -23,25 +24,25 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- 圖標組件 ---
-        const Icon = ({ name, className = "w-5 h-5" }) => {
+        // --- 圖標組件：增加固定 width/height 屬性作為後備 ---
+        const Icon = ({ name, className = "w-5 h-5", size = 20 }) => {
             const icons = {
-                MapPin: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
-                Trophy: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
-                Search: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
-                ChevronDown: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>,
-                ChevronUp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>,
-                CheckCircle2: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>,
-                Camera: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>,
-                Calendar: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
-                Image: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>,
-                Cloud: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c3.037 0 5.5-2.463 5.5-5.5 0-2.77-2.053-5.06-4.73-5.437A7.002 7.002 0 0 0 5 8c0 .323.023.64.066.95C2.175 9.94 0 12.716 0 16c0 3.314 2.686 6 6 6h11.5"/></svg>,
-                RefreshCw: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                MapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+                Trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+                Search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+                ChevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>,
+                ChevronUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>,
+                CheckCircle2: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+                Camera: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>,
+                Calendar: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
+                Image: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>,
+                Cloud: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c3.037 0 5.5-2.463 5.5-5.5 0-2.77-2.053-5.06-4.73-5.437A7.002 7.002 0 0 0 5 8c0 .323.023.64.066.95C2.175 9.94 0 12.716 0 16c0 3.314 2.686 6 6 6h11.5"/></svg>,
+                RefreshCw: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
             };
             return icons[name] || null;
         };
 
-        // --- 分類景點資料 ---
+        // --- 完整景點資料 ---
         const INITIAL_DATA = [
             { id: '3v', category: '日本三景', items: ['松島', '天橋立', '宮島'] },
             { id: '3g', category: '日本三名園', items: ['兼六園', '後樂園', '偕樂園'] },
@@ -65,7 +66,6 @@
             const [isSyncing, setIsSyncing] = useState(false);
             const [showSyncPanel, setShowSyncPanel] = useState(false);
 
-            // 初始化：從 LocalStorage 載入
             useEffect(() => {
                 const saved = localStorage.getItem('japan_travel_records');
                 const config = localStorage.getItem('japan_travel_sync_config');
@@ -73,52 +73,38 @@
                 if (config) setSyncConfig(JSON.parse(config));
             }, []);
 
-            // 儲存邏輯 (本地 + 嘗試同步 GitHub)
             const saveRecords = async (newRecords) => {
                 setRecords(newRecords);
                 localStorage.setItem('japan_travel_records', JSON.stringify(newRecords));
-                
                 if (syncConfig.token && syncConfig.repo) {
                     await syncToGitHub(newRecords);
                 }
             };
 
-            // GitHub API 同步核心邏輯
             const syncToGitHub = async (data) => {
                 if (!syncConfig.token || !syncConfig.repo) return;
                 setIsSyncing(true);
                 try {
                     const url = `https://api.github.com/repos/${syncConfig.repo}/contents/${syncConfig.path}`;
-                    // 先取得檔案 SHA (才能更新)
                     const res = await fetch(url, { headers: { Authorization: `token ${syncConfig.token}` } });
                     let sha = '';
                     if (res.ok) {
                         const fileData = await res.json();
                         sha = fileData.sha;
                     }
-
                     const body = {
                         message: `Update travel records ${new Date().toISOString()}`,
                         content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
                         sha: sha || undefined
                     };
-
                     await fetch(url, {
                         method: 'PUT',
-                        headers: { 
-                            Authorization: `token ${syncConfig.token}`,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { Authorization: `token ${syncConfig.token}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
-                } catch (err) {
-                    console.error("Sync Failed", err);
-                } finally {
-                    setIsSyncing(false);
-                }
+                } catch (err) { console.error("Sync Failed", err); } finally { setIsSyncing(false); }
             };
 
-            // 從 GitHub 讀取
             const fetchFromGitHub = async () => {
                 if (!syncConfig.token || !syncConfig.repo) return;
                 setIsSyncing(true);
@@ -131,11 +117,7 @@
                         setRecords(content);
                         localStorage.setItem('japan_travel_records', JSON.stringify(content));
                     }
-                } catch (err) {
-                    alert("讀取失敗，請檢查 Token 與 Repo 名稱");
-                } finally {
-                    setIsSyncing(false);
-                }
+                } catch (err) { alert("讀取失敗，請檢查 Token 與 Repo 名稱"); } finally { setIsSyncing(false); }
             };
 
             const handleToggleVisit = (item) => {
@@ -149,16 +131,9 @@
                 saveRecords(newRecords);
             };
 
-            const handleUpdateRecord = (item, field, value) => {
-                const newRecords = { ...records };
-                newRecords[item] = { ...newRecords[item], [field]: value };
-                saveRecords(newRecords);
-            };
-
             const stats = useMemo(() => {
                 const total = INITIAL_DATA.reduce((acc, cat) => acc + cat.items.length, 0);
-                const visitedCount = Object.keys(records).length;
-                return { total, visitedCount, percent: Math.round((visitedCount / total) * 100) };
+                return { total, visitedCount: Object.keys(records).length };
             }, [records]);
 
             const filteredData = useMemo(() => {
@@ -172,142 +147,68 @@
             return (
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-4xl mx-auto">
-                        {/* Header */}
                         <header className="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div>
-                                    <h1 className="text-3xl font-black text-red-600 flex items-center gap-2">
-                                        <Icon name="MapPin" className="w-8 h-8" /> 旅日足跡
+                                <div className="text-center md:text-left">
+                                    <h1 className="text-3xl font-black text-red-600 flex items-center justify-center md:justify-start gap-2">
+                                        <Icon name="MapPin" className="text-red-600" size={32} /> 旅日足跡
                                     </h1>
-                                    <button 
-                                        onClick={() => setShowSyncPanel(!showSyncPanel)}
-                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors"
-                                    >
-                                        <Icon name="Cloud" className="w-3 h-3" />
-                                        {syncConfig.repo ? `同步中: ${syncConfig.repo}` : '尚未連結 GitHub 同步'}
-                                        {isSyncing && <Icon name="RefreshCw" className="w-3 h-3 animate-spin" />}
+                                    <button onClick={() => setShowSyncPanel(!showSyncPanel)} className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500">
+                                        <Icon name="Cloud" size={14} /> {syncConfig.repo ? `同步中: ${syncConfig.repo}` : '尚未連結 GitHub 同步'}
+                                        {isSyncing && <Icon name="RefreshCw" className="animate-spin" size={14} />}
                                     </button>
                                 </div>
                                 <div className="flex items-center gap-4 bg-slate-100 px-5 py-3 rounded-2xl">
-                                    <Icon name="Trophy" className="text-amber-500 w-7 h-7" />
+                                    <Icon name="Trophy" className="text-amber-500" size={28} />
                                     <div className="text-xl font-black text-slate-800">{stats.visitedCount} <span className="text-sm font-normal text-slate-400">/ {stats.total}</span></div>
                                 </div>
                             </div>
-
-                            {/* 同步設定面板 */}
                             {showSyncPanel && (
                                 <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                    <h3 className="text-sm font-bold text-slate-600">GitHub 同步設定</h3>
-                                    <input 
-                                        type="password" placeholder="GitHub Token (PAT)" 
-                                        className="w-full p-2 text-xs rounded-lg border"
-                                        value={syncConfig.token}
-                                        onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})}
-                                    />
-                                    <input 
-                                        type="text" placeholder="Repo 名稱 (帳號/名稱, 如: user/my-travel)" 
-                                        className="w-full p-2 text-xs rounded-lg border"
-                                        value={syncConfig.repo}
-                                        onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})}
-                                    />
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={() => {
-                                                localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig));
-                                                fetchFromGitHub();
-                                            }}
-                                            className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg"
-                                        >儲存並從 GitHub 讀取資料</button>
-                                    </div>
+                                    <input type="password" placeholder="GitHub Token" className="w-full p-2 text-xs rounded-lg border outline-none focus:ring-1 focus:ring-red-300" value={syncConfig.token} onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})} />
+                                    <input type="text" placeholder="Repo (帳號/名稱)" className="w-full p-2 text-xs rounded-lg border outline-none focus:ring-1 focus:ring-red-300" value={syncConfig.repo} onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})} />
+                                    <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full">儲存並從雲端同步</button>
                                 </div>
                             )}
-
                             <div className="mt-6 relative">
-                                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input 
-                                    type="text" placeholder="搜尋景點名稱..."
-                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500 transition-all"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input type="text" placeholder="搜尋景點..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                             </div>
                         </header>
 
-                        {/* Content */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 pb-20">
                             {filteredData.map(category => (
                                 <div key={category.id} className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                                    <button 
-                                        onClick={() => setExpandedCategories(prev => ({...prev, [category.id]: !prev[category.id]}))}
-                                        className="w-full px-6 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors"
-                                    >
+                                    <button onClick={() => setExpandedCategories(prev => ({...prev, [category.id]: !prev[category.id]}))} className="w-full px-6 py-5 flex justify-between items-center hover:bg-slate-50">
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-slate-700">{category.category}</h2>
-                                            <span className="text-xs font-bold bg-red-50 text-red-600 px-3 py-1 rounded-full">
-                                                {category.items.filter(i => records[i]).length} / {category.items.length}
-                                            </span>
+                                            <span className="text-xs font-bold bg-red-50 text-red-600 px-3 py-1 rounded-full">{category.items.filter(i => records[i]).length} / {category.items.length}</span>
                                         </div>
-                                        <Icon name={expandedCategories[category.id] ? "ChevronUp" : "ChevronDown"} className="text-slate-400" />
+                                        <Icon name={expandedCategories[category.id] ? "ChevronUp" : "ChevronDown"} className="text-slate-400" size={20} />
                                     </button>
-
                                     {(expandedCategories[category.id] || searchQuery) && (
                                         <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50">
                                             {category.items.map(item => {
                                                 const record = records[item];
                                                 return (
                                                     <div key={item} className={`p-4 rounded-2xl border transition-all ${record ? 'border-red-100 bg-red-50/20' : 'border-slate-100 bg-white'}`}>
-                                                        <div className="flex justify-between items-center mb-2">
+                                                        <div className="flex justify-between items-center">
                                                             <div className="flex items-center gap-3">
-                                                                <button 
-                                                                    onClick={() => handleToggleVisit(item)} 
-                                                                    className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200'}`}
-                                                                >
-                                                                    <Icon name="CheckCircle2" className={`w-7 h-7 ${record ? 'fill-red-50' : ''}`} />
-                                                                </button>
+                                                                <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
                                                                 <span className={`font-bold ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
                                                             </div>
-                                                            {record && (
-                                                                <button 
-                                                                    onClick={() => setEditingItem(editingItem === item ? null : item)} 
-                                                                    className="text-xs text-slate-400 underline"
-                                                                >
-                                                                    {editingItem === item ? '收起' : '編輯'}
-                                                                </button>
-                                                            )}
+                                                            {record && <button onClick={() => setEditingItem(editingItem === item ? null : item)} className="text-xs text-slate-400 underline">{editingItem === item ? '收起' : '編輯'}</button>}
                                                         </div>
-
-                                                        {/* 直接顯示 Snapshot */}
-                                                        {record && !editingItem && record.imageUrl && (
-                                                            <div className="mt-2 mb-3 rounded-xl overflow-hidden border aspect-video bg-slate-100">
-                                                                <img src={record.imageUrl} alt={item} className="w-full h-full object-cover" />
-                                                            </div>
-                                                        )}
-
-                                                        {record && !editingItem && (
-                                                            <div className="flex flex-wrap gap-3 mt-1 pl-10">
-                                                                <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1"><Icon name="Calendar" className="w-3.5 h-3.5" /> {record.date}</div>
-                                                                {record.albumUrl && (
-                                                                    <a href={record.albumUrl} target="_blank" rel="noreferrer" className="text-[11px] font-bold text-red-500 flex items-center gap-1 underline"><Icon name="Image" className="w-3.5 h-3.5" /> 相簿</a>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {record && editingItem === item && (
-                                                            <div className="mt-4 space-y-3 p-3 bg-white rounded-xl border border-red-100 shadow-inner">
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-bold text-slate-400">日期</label>
-                                                                    <input type="date" className="w-full bg-slate-50 p-2 rounded text-sm" value={record.date} onChange={(e) => handleUpdateRecord(item, 'date', e.target.value)} />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-bold text-slate-400">Snapshot 網址 (圖床)</label>
-                                                                    <input type="text" placeholder="https://..." className="w-full bg-slate-50 p-2 rounded text-xs" value={record.imageUrl} onChange={(e) => handleUpdateRecord(item, 'imageUrl', e.target.value)} />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-bold text-slate-400">Google Photos 相簿</label>
-                                                                    <input type="text" placeholder="https://photos.google.com/..." className="w-full bg-slate-50 p-2 rounded text-xs" value={record.albumUrl} onChange={(e) => handleUpdateRecord(item, 'albumUrl', e.target.value)} />
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        {record && !editingItem && record.imageUrl && <div className="mt-3 mb-2 rounded-xl overflow-hidden border aspect-video bg-slate-100 max-w-[240px]"><img src={record.imageUrl} alt={item} className="w-full h-full object-cover" /></div>}
+                                                        {record && !editingItem && <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-10">
+                                                            {record.date && <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1"><Icon name="Calendar" size={14} /> {record.date}</div>}
+                                                            {record.albumUrl && <a href={record.albumUrl} target="_blank" className="text-[11px] font-bold text-red-500 flex items-center gap-1 underline"><Icon name="Image" size={14} /> 查看相簿</a>}
+                                                        </div>}
+                                                        {record && editingItem === item && <div className="mt-4 space-y-3 p-3 bg-white rounded-xl border border-red-100">
+                                                            <div><label className="text-[10px] font-bold text-slate-400">造訪日期</label><input type="date" className="w-full bg-slate-50 p-2 rounded text-sm outline-none" value={record.date} onChange={(e) => { const r = {...records}; r[item].date = e.target.value; saveRecords(r); }} /></div>
+                                                            <div><label className="text-[10px] font-bold text-slate-400">Snapshot 圖片位址</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.imageUrl} onChange={(e) => { const r = {...records}; r[item].imageUrl = e.target.value; saveRecords(r); }} /></div>
+                                                            <div><label className="text-[10px] font-bold text-slate-400">相簿連結</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.albumUrl} onChange={(e) => { const r = {...records}; r[item].albumUrl = e.target.value; saveRecords(r); }} /></div>
+                                                        </div>}
                                                     </div>
                                                 );
                                             })}
@@ -320,7 +221,6 @@
                 </div>
             );
         };
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
