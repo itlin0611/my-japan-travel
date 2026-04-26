@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅日足跡紀錄器 - GitHub 同步版</title>
+    <title>旅日足跡紀錄器 - 雲端同步版</title>
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,8 +14,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
-        /* 避免圖示在 Tailwind 載入前爆炸的後備樣式 */
-        svg { max-width: 100%; height: auto; }
+        /* 避免圖示在 Tailwind 載入前爆炸 */
+        svg { max-width: 100%; height: auto; display: inline-block; vertical-align: middle; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- 圖標組件：增加固定 width/height 屬性作為後備 ---
+        // --- 圖標組件：增加固定尺寸屬性作為備援 ---
         const Icon = ({ name, className = "w-5 h-5", size = 20 }) => {
             const icons = {
                 MapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
@@ -42,14 +43,14 @@
             return icons[name] || null;
         };
 
-        // --- 完整景點資料 ---
+        // --- 完整景點資料 (約 220 個) ---
         const INITIAL_DATA = [
             { id: '3v', category: '日本三景', items: ['松島', '天橋立', '宮島'] },
             { id: '3g', category: '日本三名園', items: ['兼六園', '後樂園', '偕樂園'] },
             { id: '3s', category: '日本三名泉', items: ['有馬溫泉', '草津溫泉', '下呂溫泉'] },
             { id: '3n', category: '日本三大夜景', items: ['函館山夜景', '摩耶山掬星台夜景', '稻佐山夜景'] },
             { id: '12t', category: '現存十二天守', items: ['弘前城', '松本城', '丸岡城', '犬山城', '彥根城', '姬路城', '松江城', '備中松山城', '丸龜城', '松山城', '宇和島城', '高知城'] },
-            { id: 'wh', category: '日本世界遺產', items: ['古都京都的文化財', '姬路城(WH)', '白川鄉合掌造村落', '嚴島神社', '古都奈良的文化財', '日光的神社與寺院', '富士山', '法隆寺地區', '屋久島', '白神山地', '廣島和平紀念館', '紀伊山地的靈場', '知床半島', '石見銀山', '平泉', '小笠原群島', '富岡製絲廠', '明治日本產業革命遺產', '國立西洋美術館', '沖之島', '長崎隱忍基督徒遺址', '百舌鳥・古市古墳群', '繩紋遺跡群', '佐渡島的金山']},
+            { id: 'wh', category: '日本世界遺產', items: ['法隆寺地區的佛教古蹟', '姬路城(WH)', '屋久島', '白神山地', '古都京都的文化財', '白川鄉與五箇山的合掌造村落', '廣島和平紀念館', '嚴島神社', '古都奈良的文化財', '日光的神社與寺院', '琉球王國的城堡遺產群', '紀伊山地的靈場參拜道', '知床半島', '石見銀山遺跡', '平泉—佛教淨土廟宇園林', '小笠原群島', '富士山', '富岡製絲廠', '明治日本產業革命遺產', '國立西洋美術館', '沖之島', '長崎地區隱忍基督徒遺址', '百舌鳥・古市古墳群', '北海道及北東北的繩紋遺跡', '佐渡島的金山']},
             { id: 'c100_1', category: '日本百大名城 (北/東日本)', items: ['根室半島砦跡群', '五稜郭', '松前城', '根城', '盛岡城', '多賀城', '仙台城', '久保田城', '山形城', '二本松城', '會津若松城', '白河小峰城', '水戶城', '足利氏館', '箕輪城', '金山城', '鉢形城', '川越城', '佐倉城', '江戶城', '八王子城', '小田原城', '武田氏館', '甲府城', '松代城', '上田城', '小諸城', '春日山城', '新發田城', '高岡城', '七尾城', '一乘谷城', '大野城']},
             { id: 'c100_2', category: '日本百大名城 (中/近畿)', items: ['金澤城', '福井城', '岩村城', '岐阜城', '名古屋城', '岡崎城', '長篠城', '伊賀上野城', '松阪城', '桑名城', '小谷城', '安土城', '觀音寺城', '二条城', '大阪城', '千早城', '竹田城', '篠山城', '明石城', '高取城', '和歌山城', '赤穗城', '洲本城']},
             { id: 'c100_3', category: '日本百大名城 (西日本/九州)', items: ['岡山城', '津山城', '福山城', '吉田郡山城', '廣島城', '岩國城', '萩城', '津和野城', '德島城', '高松城', '今治城', '湯築城', '大洲城', '福岡城', '名護屋城', '吉野里遺跡', '佐賀城', '平戶城', '島原城', '熊本城', '人吉城', '大分府內城', '岡城', '飫肥城', '鹿兒島城', '首里城']},
@@ -66,13 +67,18 @@
             const [isSyncing, setIsSyncing] = useState(false);
             const [showSyncPanel, setShowSyncPanel] = useState(false);
 
+            // 載入初始配置
             useEffect(() => {
                 const saved = localStorage.getItem('japan_travel_records');
                 const config = localStorage.getItem('japan_travel_sync_config');
                 if (saved) setRecords(JSON.parse(saved));
-                if (config) setSyncConfig(JSON.parse(config));
+                if (config) {
+                    const parsedConfig = JSON.parse(config);
+                    setSyncConfig(parsedConfig);
+                }
             }, []);
 
+            // 儲存邏輯 (本地 + 雲端)
             const saveRecords = async (newRecords) => {
                 setRecords(newRecords);
                 localStorage.setItem('japan_travel_records', JSON.stringify(newRecords));
@@ -93,7 +99,7 @@
                         sha = fileData.sha;
                     }
                     const body = {
-                        message: `Update travel records ${new Date().toISOString()}`,
+                        message: `Update travel records ${new Date().toLocaleString()}`,
                         content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
                         sha: sha || undefined
                     };
@@ -117,7 +123,7 @@
                         setRecords(content);
                         localStorage.setItem('japan_travel_records', JSON.stringify(content));
                     }
-                } catch (err) { alert("讀取失敗，請檢查 Token 與 Repo 名稱"); } finally { setIsSyncing(false); }
+                } catch (err) { alert("讀取失敗，請確認 Token 權限及 Repo 路徑正確"); } finally { setIsSyncing(false); }
             };
 
             const handleToggleVisit = (item) => {
@@ -154,7 +160,7 @@
                                         <Icon name="MapPin" className="text-red-600" size={32} /> 旅日足跡
                                     </h1>
                                     <button onClick={() => setShowSyncPanel(!showSyncPanel)} className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500">
-                                        <Icon name="Cloud" size={14} /> {syncConfig.repo ? `同步中: ${syncConfig.repo}` : '尚未連結 GitHub 同步'}
+                                        <Icon name="Cloud" size={14} /> {syncConfig.repo ? `已連結: ${syncConfig.repo}` : '尚未連結 GitHub'}
                                         {isSyncing && <Icon name="RefreshCw" className="animate-spin" size={14} />}
                                     </button>
                                 </div>
@@ -163,52 +169,77 @@
                                     <div className="text-xl font-black text-slate-800">{stats.visitedCount} <span className="text-sm font-normal text-slate-400">/ {stats.total}</span></div>
                                 </div>
                             </div>
+
                             {showSyncPanel && (
                                 <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                    <input type="password" placeholder="GitHub Token" className="w-full p-2 text-xs rounded-lg border outline-none focus:ring-1 focus:ring-red-300" value={syncConfig.token} onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})} />
-                                    <input type="text" placeholder="Repo (帳號/名稱)" className="w-full p-2 text-xs rounded-lg border outline-none focus:ring-1 focus:ring-red-300" value={syncConfig.repo} onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})} />
-                                    <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full">儲存並從雲端同步</button>
+                                    <h3 className="text-sm font-bold text-slate-600">GitHub 同步設定</h3>
+                                    <input type="password" placeholder="GitHub Token (PAT)" className="w-full p-2 text-xs rounded-lg border focus:ring-1 focus:ring-red-300 outline-none" value={syncConfig.token} onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})} />
+                                    <input type="text" placeholder="Repo (帳號/名稱，如 itlin0611/my-japan-travel)" className="w-full p-2 text-xs rounded-lg border focus:ring-1 focus:ring-red-300 outline-none" value={syncConfig.repo} onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})} />
+                                    <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full shadow-sm active:scale-95 transition-transform">儲存並從雲端同步資料</button>
                                 </div>
                             )}
+
                             <div className="mt-6 relative">
                                 <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                                <input type="text" placeholder="搜尋景點..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                <input type="text" placeholder="搜尋景點名稱..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-red-500 transition-all" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                             </div>
                         </header>
 
                         <div className="space-y-4 pb-20">
                             {filteredData.map(category => (
                                 <div key={category.id} className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                                    <button onClick={() => setExpandedCategories(prev => ({...prev, [category.id]: !prev[category.id]}))} className="w-full px-6 py-5 flex justify-between items-center hover:bg-slate-50">
+                                    <button onClick={() => setExpandedCategories(prev => ({...prev, [category.id]: !prev[category.id]}))} className="w-full px-6 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-slate-700">{category.category}</h2>
                                             <span className="text-xs font-bold bg-red-50 text-red-600 px-3 py-1 rounded-full">{category.items.filter(i => records[i]).length} / {category.items.length}</span>
                                         </div>
                                         <Icon name={expandedCategories[category.id] ? "ChevronUp" : "ChevronDown"} className="text-slate-400" size={20} />
                                     </button>
+
                                     {(expandedCategories[category.id] || searchQuery) && (
                                         <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50">
                                             {category.items.map(item => {
                                                 const record = records[item];
                                                 return (
-                                                    <div key={item} className={`p-4 rounded-2xl border transition-all ${record ? 'border-red-100 bg-red-50/20' : 'border-slate-100 bg-white'}`}>
+                                                    <div key={item} className={`p-4 rounded-2xl border transition-all ${record ? 'border-red-100 bg-red-50/20 shadow-sm' : 'border-slate-100 bg-white'}`}>
                                                         <div className="flex justify-between items-center">
                                                             <div className="flex items-center gap-3">
-                                                                <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
-                                                                <span className={`font-bold ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
+                                                                <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200 hover:text-slate-300'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
+                                                                <span className={`font-bold transition-colors ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
                                                             </div>
                                                             {record && <button onClick={() => setEditingItem(editingItem === item ? null : item)} className="text-xs text-slate-400 underline">{editingItem === item ? '收起' : '編輯'}</button>}
                                                         </div>
-                                                        {record && !editingItem && record.imageUrl && <div className="mt-3 mb-2 rounded-xl overflow-hidden border aspect-video bg-slate-100 max-w-[240px]"><img src={record.imageUrl} alt={item} className="w-full h-full object-cover" /></div>}
-                                                        {record && !editingItem && <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-10">
-                                                            {record.date && <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1"><Icon name="Calendar" size={14} /> {record.date}</div>}
-                                                            {record.albumUrl && <a href={record.albumUrl} target="_blank" className="text-[11px] font-bold text-red-500 flex items-center gap-1 underline"><Icon name="Image" size={14} /> 查看相簿</a>}
-                                                        </div>}
-                                                        {record && editingItem === item && <div className="mt-4 space-y-3 p-3 bg-white rounded-xl border border-red-100">
-                                                            <div><label className="text-[10px] font-bold text-slate-400">造訪日期</label><input type="date" className="w-full bg-slate-50 p-2 rounded text-sm outline-none" value={record.date} onChange={(e) => { const r = {...records}; r[item].date = e.target.value; saveRecords(r); }} /></div>
-                                                            <div><label className="text-[10px] font-bold text-slate-400">Snapshot 圖片位址</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.imageUrl} onChange={(e) => { const r = {...records}; r[item].imageUrl = e.target.value; saveRecords(r); }} /></div>
-                                                            <div><label className="text-[10px] font-bold text-slate-400">相簿連結</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.albumUrl} onChange={(e) => { const r = {...records}; r[item].albumUrl = e.target.value; saveRecords(r); }} /></div>
-                                                        </div>}
+
+                                                        {/* 檢視模式下直接顯示 Snapshot */}
+                                                        {record && !editingItem && record.imageUrl && (
+                                                            <div className="mt-3 mb-2 rounded-xl overflow-hidden border aspect-video bg-slate-100 shadow-sm max-w-[240px]">
+                                                                <img src={record.imageUrl} alt={item} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                                            </div>
+                                                        )}
+
+                                                        {record && !editingItem && (
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-10">
+                                                                {record.date && <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1"><Icon name="Calendar" size={14} /> {record.date}</div>}
+                                                                {record.albumUrl && <a href={record.albumUrl} target="_blank" className="text-[11px] font-bold text-red-500 flex items-center gap-1 underline"><Icon name="Image" size={14} /> 查看相簿</a>}
+                                                            </div>
+                                                        )}
+
+                                                        {record && editingItem === item && (
+                                                            <div className="mt-4 space-y-3 p-3 bg-white rounded-xl border border-red-100 shadow-inner">
+                                                                <div>
+                                                                    <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">日期</label>
+                                                                    <input type="date" className="w-full bg-slate-50 p-2 rounded text-sm outline-none" value={record.date} onChange={(e) => { const r = {...records}; r[item].date = e.target.value; saveRecords(r); }} />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase text-xs">Snapshot 圖片直連網址</label>
+                                                                    <input type="text" placeholder="https://... (圖床網址)" className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.imageUrl} onChange={(e) => { const r = {...records}; r[item].imageUrl = e.target.value; saveRecords(r); }} />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase text-xs">Google Photos 相簿/連結</label>
+                                                                    <input type="text" placeholder="https://photos.google.com/..." className="w-full bg-slate-50 p-2 rounded text-xs outline-none" value={record.albumUrl} onChange={(e) => { const r = {...records}; r[item].albumUrl = e.target.value; saveRecords(r); }} />
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             })}
@@ -221,6 +252,7 @@
                 </div>
             );
         };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
