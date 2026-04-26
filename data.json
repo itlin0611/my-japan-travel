@@ -118,5 +118,11 @@
     "date": "2017-07-22",
     "imageUrl": "https://i.postimg.cc/cJ7zqMJ2/bai-chuan.jpg",
     "albumUrl": "https://photos.app.goo.gl/uEz3iutWPnpD1KF1A"
+  },
+  "五稜郭": {
+    "visited": true,
+    "date": "2026-04-26",
+    "imageUrl": "",
+    "albumUrl": ""
   }
 }
