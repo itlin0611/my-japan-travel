@@ -20,6 +20,7 @@
         svg { max-width: 100%; height: auto; display: inline-block; vertical-align: middle; }
         #map { height: 500px; width: 100%; border-radius: 1.5rem; z-index: 10; }
         .leaflet-div-icon { background: transparent; border: none; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -28,45 +29,37 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- 座標資料表 (範例：包含重要景點，可自行補完) ---
+        // --- 完整座標資料表 ---
         const COORDINATES = {
             // 日本三景
             '松島': [38.3686, 141.0592], '天橋立': [35.5694, 135.1861], '宮島': [34.2959, 132.3197],
             // 三名園
             '兼六園': [36.5621, 136.6627], '後樂園': [34.6670, 133.9361], '偕樂園': [36.3758, 140.4533],
+            // 三名泉
+            '有馬溫泉': [34.7979, 135.2472], '草津溫泉': [36.6226, 138.5966], '下呂溫泉': [35.8118, 137.2435],
+            // 三大夜景
+            '函館山夜景': [41.7592, 140.7041], '摩耶山掬星台夜景': [34.7335, 135.2066], '稻佐山夜景': [32.7533, 129.8519],
+            // 三大名瀑
+            '那智大瀑布': [33.6750, 135.8875], '華嚴瀑布': [36.7360, 139.5020], '袋田瀑布': [36.7645, 140.4042],
+            // 茅草屋聚落
+            '白川鄉合掌村': [36.2735, 136.9063], '五箇山合掌村': [36.4022, 136.9372], '美山茅草屋之里': [35.3146, 135.5065], '大內宿': [37.3331, 139.8605],
             // 十二天守
-            '弘前城': [40.6074, 140.4641], '松本城': [36.2388, 137.9684], '丸岡城': [36.1522, 136.2719], 
-            '犬山城': [35.3917, 136.9392], '彥根城': [35.2764, 136.2517], '姬路城': [34.8394, 134.6939],
-            '松江城': [35.4752, 133.0506], '備中松山城': [34.8089, 133.6224], '丸龜城': [34.2862, 133.8001],
-            '伊予松山城': [33.8456, 132.7654], '宇和島城': [33.2195, 132.5651], '高知城': [33.5607, 133.5315],
-            // 地標
-            '東京鐵塔': [35.6586, 139.7454], '富士山': [35.3606, 138.7274], '嚴島神社': [34.2960, 132.3198],
-            '白川鄉合掌村': [36.2735, 136.9063], '那智大瀑布': [33.6750, 135.8875], '華嚴瀑布': [36.7360, 139.5020],
-            // 更多名城 (僅列出部分作為示範，使用者可根據需要擴充)
-            '五稜郭': [41.7968, 140.7570], '江戶城': [35.6852, 139.7528], '大阪城': [34.6873, 135.5262],
-            '熊本城': [32.8062, 130.7058], '首里城': [26.2170, 127.7194], '鳥取城': [35.5056, 134.2392],
-            '月山富田城': [35.3622, 133.1895]
+            '弘前城': [40.6074, 140.4641], '松本城': [36.2388, 137.9684], '丸岡城': [36.1522, 136.2719], '犬山城': [35.3917, 136.9392], '彥根城': [35.2764, 136.2517], '姬路城': [34.8394, 134.6939], '松江城': [35.4752, 133.0506], '備中松山城': [34.8089, 133.6224], '丸龜城': [34.2862, 133.8001], '伊予松山城': [33.8456, 132.7654], '宇和島城': [33.2195, 132.5651], '高知城': [33.5607, 133.5315],
+            // 世界遺產 (非城郭類)
+            '古都京都的文化財': [35.0394, 135.7292], '屋久島': [30.3447, 130.5126], '白神山地': [40.4983, 140.1264], '廣島和平紀念館': [34.3941, 132.4547], '嚴島神社': [34.2960, 132.3198], '古都奈良的文化財': [34.6851, 135.8048], '日光的神社與寺院': [36.7581, 139.5990], '富士山': [35.3606, 138.7274], '法隆寺地區的佛教古蹟': [34.6141, 135.7356], '知床半島': [44.1118, 145.0360], '石見銀山遺跡': [35.1054, 132.4397], '平泉': [38.9866, 141.1141], '小笠原群島': [27.0945, 142.1932], '富岡製絲廠': [36.2551, 138.8876], '明治日本產業革命遺產': [32.6277, 129.7384], '國立西洋美術館': [35.7154, 139.7758], '沖之島': [34.2450, 130.1031], '長崎地區隱忍基督徒遺址': [32.7341, 129.8702], '百舌鳥・古市古墳群': [34.5645, 135.4876], '北海道及北東北的繩紋遺跡': [40.8105, 140.6980], '佐渡島的金山': [38.0372, 138.2584],
+            // 百大名城 01-34 (東北/關東/甲信越)
+            '根室半島砦跡群': [43.3837, 145.7347], '五稜郭': [41.7968, 140.7570], '松前城': [41.4297, 140.1162], '根城': [40.5058, 141.4682], '盛岡城': [39.7003, 141.1501], '多賀城': [38.3039, 140.9902], '仙台城': [38.2526, 140.8560], '久保田城': [39.7219, 140.1241], '山形城': [38.2547, 140.3283], '二本松城': [37.5923, 140.4289], '會津若松城': [37.4877, 139.9298], '白河小峰城': [37.1332, 140.2144], '水戶城': [36.3756, 140.4816], '足利氏館': [36.3396, 139.4522], '箕輪城': [36.4027, 138.9515], '金山城': [36.3387, 139.3694], '鉢形城': [36.1086, 139.1919], '川越城': [35.9250, 139.4913], '佐倉城': [35.7208, 140.2163], '江戶城': [35.6852, 139.7528], '八王子城': [35.6517, 139.2550], '小田原城': [35.2511, 139.1536], '武田氏館': [35.6841, 138.5772], '甲府城': [35.6670, 138.5714], '松代城': [36.5647, 138.1969], '上田城': [36.4035, 138.2435], '小諸城': [36.3263, 138.4206], '春日山城': [37.1472, 138.2045], '新發田城': [37.9547, 139.3259], '高岡城': [36.7455, 137.0221], '七尾城': [37.0182, 136.9859], '一乘谷城': [35.9996, 136.2956],
+            // 百大名城 35-67 (東海/北陸/近畿/中國)
+            '金澤城': [36.5646, 136.6593], '越前大野城': [35.9866, 136.4811], '福井城': [36.0649, 136.2211], '岩村城': [35.3582, 137.4513], '岐阜城': [35.4338, 136.7821], '山中城': [35.1561, 138.9972], '駿府城': [34.9789, 138.3831], '掛川城': [34.7753, 138.0145], '濱松城': [34.7115, 137.7247], '名古屋城': [35.1847, 136.8997], '岡崎城': [34.9565, 137.1587], '長篠城': [34.9228, 137.5615], '伊賀上野城': [34.7712, 136.1287], '松阪城': [34.5756, 136.5255], '桑名城': [35.0664, 136.6974], '安土城': [35.1557, 136.1393], '觀音寺城': [35.1466, 136.1627], '二条城': [35.0142, 135.7482], '大阪城': [34.6873, 135.5262], '千早城': [34.4168, 135.6385], '竹田城': [35.3010, 134.8293], '篠山城': [35.0717, 135.2185], '明石城': [34.6526, 135.0006], '高取城': [34.4294, 135.8344], '和歌山城': [34.2276, 135.1732], '赤穗城': [34.7461, 134.3892], '鳥取城': [35.5056, 134.2392], '月山富田城': [35.3622, 133.1895], '津和野城': [34.4601, 131.7615], '岡山城': [34.6651, 133.9362],
+            // 百大名城 68-100 (中國/四國/九州/沖繩)
+            '津山城': [35.0610, 134.0044], '福山城': [34.4912, 133.3615], '吉田郡山城': [34.6738, 132.7042], '廣島城': [34.4026, 132.4593], '岩國城': [34.1742, 132.1745], '萩城': [34.4173, 131.3837], '德島城': [34.0751, 134.5556], '一宮城': [34.0336, 134.4533], '高松城': [34.3503, 134.0506], '今治城': [34.0663, 133.0076], '湯築城': [33.8504, 132.7856], '大洲城': [33.5097, 132.5401], '福岡城': [33.5851, 130.3833], '大野城(九州)': [33.5387, 130.5186], '名護屋城': [33.5303, 129.8643], '吉野里遺跡': [33.3276, 130.3846], '佐賀城': [33.2452, 130.3015], '平戶城': [33.3703, 129.5574], '島原城': [32.7917, 130.3683], '熊本城': [32.8062, 130.7058], '人吉城': [32.2119, 130.7634], '大分府內城': [33.2397, 131.6094], '岡城': [32.9715, 131.4011], '飫肥城': [31.6288, 131.3533], '鹿兒島城': [31.5979, 130.5544], '首里城': [26.2170, 127.7194], '今歸仁城': [26.6917, 127.9294], '中城城': [26.2842, 127.8017],
+            // 人氣地標 - 東
+            '東京鐵塔': [35.6586, 139.7454], '晴空塔': [35.7101, 139.8107], '淺草寺': [35.7148, 139.7967], '明治神宮': [35.6764, 139.6993], '澀谷十字路口': [35.6595, 139.7005], '台場鋼彈': [35.6244, 139.7755], '鎌倉大佛': [35.3168, 139.5361], '江之島': [35.3010, 139.4811], '蘆之湖': [35.2053, 139.0224], '箱根神社': [35.2048, 139.0253], '忍野八海': [35.4604, 138.8328], '新倉山淺間公園': [35.5034, 138.8045], '國營常陸海濱公園': [36.4055, 140.5986], '日光東照宮': [36.7581, 139.5990], '黑部立山': [36.5746, 137.6049], '地獄谷野猿公苑': [36.7327, 138.4621], '上高地': [36.2483, 137.6433], '飛驒高山古街': [36.1408, 137.2587],
+            // 人氣地標 - 西
+            '伊勢神宮': [34.4550, 136.7258], '琵琶湖白鬚鳥居': [35.2743, 136.0354], '伏見稻荷大社': [34.9671, 135.7727], '清水寺': [34.9949, 135.7850], '金閣寺': [35.0394, 135.7292], '嵐山竹林': [35.0175, 135.6748], '三十三間堂': [34.9878, 135.7717], '奈良公園': [34.6851, 135.8048], '東大寺': [34.6890, 135.8398], '春日大社': [34.6814, 135.8485], '萬博紀念公園': [34.8105, 135.5303], '道頓堀': [34.6687, 135.5013], '神戶港塔': [34.6826, 135.1867], '有馬溫泉街': [34.7979, 135.2472], '出雲大社': [35.4021, 132.6854], '鳥取砂丘': [35.5401, 134.2305], '足立美術館': [35.3780, 133.1895], '金刀比羅宮': [34.1843, 133.8125], '鳴門渦潮': [34.2378, 134.6511], '太宰府天滿宮': [33.5215, 130.5348], '由布院金鱗湖': [33.2671, 131.3691], '別府海地獄': [33.3157, 131.4697], '阿蘇火山': [32.8841, 131.0847], '高千穗峽': [32.7111, 131.3001], '櫻島火山': [31.5938, 130.6572], '美之海水族館': [26.6943, 127.8779], '萬座毛': [26.5048, 127.8505]
         };
 
-        // --- 圖標組件 ---
-        const Icon = ({ name, className = "w-5 h-5", size = 20 }) => {
-            const icons = {
-                MapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
-                Trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
-                Search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
-                ChevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>,
-                ChevronUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>,
-                CheckCircle2: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>,
-                Map: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
-                Cloud: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c3.037 0 5.5-2.463 5.5-5.5 0-2.77-2.053-5.06-4.73-5.437A7.002 7.002 0 0 0 5 8c0 .323.023.64.066.95C2.175 9.94 0 12.716 0 16c0 3.314 2.686 6 6 6h11.5"/></svg>,
-                RefreshCw: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>,
-                Calendar: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
-                Image: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            };
-            return icons[name] || null;
-        };
-
-        // --- 完整景點資料 ---
+        // --- 完整景點分類資料 ---
         const INITIAL_DATA = [
             { id: '3v', category: '日本三景', icon: '🌊', items: ['松島', '天橋立', '宮島'] },
             { id: '3g', category: '日本三名園', icon: '🎋', items: ['兼六園', '後樂園', '偕樂園'] },
@@ -75,11 +68,11 @@
             { id: '3p', category: '日本三大名瀑', icon: '💧', items: ['那智大瀑布', '華嚴瀑布', '袋田瀑布'] },
             { id: '3m', category: '日本三大茅草屋聚落', icon: '🌾', items: ['白川鄉合掌村', '五箇山合掌村', '美山茅草屋之里', '大內宿'] },
             { id: '12t', category: '現存十二天守', icon: '🏯', items: ['弘前城', '松本城', '丸岡城', '犬山城', '彥根城', '姬路城', '松江城', '備中松山城', '丸龜城', '伊予松山城', '宇和島城', '高知城'] },
-            { id: 'wh', category: '日本世界遺產', icon: '🏛️', items: ['古都京都的文化財', '姬路城', '白川鄉合掌村', '嚴島神社', '古都奈良的文化財', '日光東照宮', '富士山', '法隆寺地區的佛教古蹟', '屋久島', '白神山地', '廣島和平紀念館', '知床半島', '石見銀山遺跡', '平泉', '小笠原群島', '富岡製絲廠', '明治日本產業革命遺產', '國立西洋美術館', '沖之島', '長崎地區隱忍基督徒遺址', '百舌鳥・古市古墳群', '北海道及北東北的繩紋遺跡', '佐渡島的金山']},
+            { id: 'wh', category: '日本世界遺產', icon: '🏛️', items: ['古都京都的文化財', '姬路城', '白川鄉合掌村', '嚴島神社', '古都奈良的文化財', '日光的神社與寺院', '富士山', '法隆寺地區的佛教古蹟', '屋久島', '白神山地', '廣島和平紀念館', '紀伊山地的靈場參拜道', '知床半島', '石見銀山遺跡', '平泉', '小笠原群島', '富岡製絲廠', '明治日本產業革命遺產', '國立西洋美術館', '沖之島', '長崎地區隱忍基督徒遺址', '百舌鳥・古市古墳群', '北海道及北東北的繩紋遺跡', '佐渡島的金山']},
             { id: 'c100_1', category: '日本百大名城 (01-34)', icon: '⚔️', items: ['根室半島砦跡群', '五稜郭', '松前城', '弘前城', '根城', '盛岡城', '多賀城', '仙台城', '久保田城', '山形城', '二本松城', '會津若松城', '白河小峰城', '水戶城', '足利氏館', '箕輪城', '金山城', '鉢形城', '川越城', '佐倉城', '江戶城', '八王子城', '小田原城', '武田氏館', '甲府城', '松代城', '上田城', '小諸城', '春日山城', '新發田城', '高岡城', '七尾城', '一乘谷城', '丸岡城']},
             { id: 'c100_2', category: '日本百大名城 (35-67)', icon: '⚔️', items: ['金澤城', '越前大野城', '福井城', '岩村城', '岐阜城', '山中城', '駿府城', '掛川城', '濱松城', '名古屋城', '岡崎城', '長篠城', '伊賀上野城', '松阪城', '桑名城', '彥根城', '安土城', '觀音寺城', '二条城', '大阪城', '千早城', '竹田城', '篠山城', '明石城', '高取城', '和歌山城', '赤穗城', '姬路城', '鳥取城', '松江城', '月山富田城', '津和野城', '岡山城']},
             { id: 'c100_3', category: '日本百大名城 (68-100)', icon: '⚔️', items: ['津山城', '備中松山城', '福山城', '吉田郡山城', '廣島城', '岩國城', '萩城', '德島城', '一宮城', '高松城', '丸龜城', '今治城', '湯築城', '伊予松山城', '大洲城', '宇和島城', '高知城', '福岡城', '大野城(九州)', '名護屋城', '吉野里遺跡', '佐賀城', '平戶城', '島原城', '熊本城', '人吉城', '大分府內城', '岡城', '飫肥城', '鹿兒島城', '首里城', '今歸仁城', '中城城']},
-            { id: 'land_east', category: '人氣地標 (東日本)', icon: '🗼', items: ['東京鐵塔', '晴空塔', '淺草寺', '明治神宮', '澀谷十字路口', '台場鋼彈', '鎌倉大佛', '江之島', '蘆之湖', '箱根神社', '忍野八海', '新倉山淺間公園', '國營常陸海濱公園', '日光東照宮', '草津溫泉湯畑', '黑部立山', '地獄谷野猿公苑', '上高地', '飛驒高山古街']},
+            { id: 'land_east', category: '人氣地標 (東日本)', icon: '🗼', items: ['東京鐵塔', '晴空塔', '淺草寺', '明治神宮', '澀谷十字路口', '台場鋼彈', '鎌倉大佛', '江之島', '蘆之湖', '箱根神社', '忍野八海', '新倉山淺間公園', '國營常陸海濱公園', '日光東照宮', '黑部立山', '地獄谷野猿公苑', '上高地', '飛驒高山古街']},
             { id: 'land_west', category: '人氣地標 (西日本)', icon: '⛩️', items: ['伊勢神宮', '琵琶湖白鬚鳥居', '伏見稻荷大社', '清水寺', '金閣寺', '嵐山竹林', '三十三間堂', '奈良公園', '東大寺', '春日大社', '萬博紀念公園', '道頓堀', '神戶港塔', '有馬溫泉街', '出雲大社', '鳥取砂丘', '足立美術館', '金刀比羅宮', '鳴門渦潮', '太宰府天滿宮', '由布院金鱗湖', '別府海地獄', '阿蘇火山', '高千穗峽', '櫻島火山', '美之海水族館', '萬座毛']}
         ];
 
@@ -92,7 +85,6 @@
             const [syncConfig, setSyncConfig] = useState({ token: '', repo: '', path: 'data.json' });
             const [isSyncing, setIsSyncing] = useState(false);
             const [showSyncPanel, setShowSyncPanel] = useState(false);
-            const mapRef = useRef(null);
             const mapInstance = useRef(null);
             const markersRef = useRef([]);
 
@@ -103,7 +95,7 @@
                 if (config) setSyncConfig(JSON.parse(config));
             }, []);
 
-            // 初始化地圖
+            // 初始化與更新地圖
             useEffect(() => {
                 if (showMap && !mapInstance.current) {
                     mapInstance.current = L.map('map').setView([36.2048, 138.2529], 5);
@@ -114,30 +106,23 @@
                 if (showMap) {
                     updateMarkers();
                 }
-            }, [showMap]);
-
-            // 當紀錄改變時更新標記
-            useEffect(() => {
-                if (showMap) updateMarkers();
-            }, [records]);
+            }, [showMap, records]);
 
             const updateMarkers = () => {
                 if (!mapInstance.current) return;
-                // 清除舊標記
                 markersRef.current.forEach(m => m.remove());
                 markersRef.current = [];
 
-                // 遍歷所有有座標的點
                 Object.keys(COORDINATES).forEach(name => {
                     const isVisited = records[name];
-                    const color = isVisited ? '#10b981' : '#ef4444'; // 綠色 vs 紅色
+                    const color = isVisited ? '#10b981' : '#ef4444'; 
                     const marker = L.circleMarker(COORDINATES[name], {
-                        radius: 8,
+                        radius: 7,
                         fillColor: color,
                         color: "#fff",
-                        weight: 2,
+                        weight: 1.5,
                         opacity: 1,
-                        fillOpacity: 0.8
+                        fillOpacity: 0.9
                     }).addTo(mapInstance.current);
                     
                     marker.bindPopup(`<b>${name}</b><br>${isVisited ? '✅ 已造訪' : '❌ 未造訪'}`);
@@ -218,6 +203,24 @@
                 })).filter(cat => cat.items.length > 0);
             }, [searchQuery]);
 
+            // --- 圖標組件 ---
+            const Icon = ({ name, className = "w-5 h-5", size = 20 }) => {
+                const icons = {
+                    MapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+                    Trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+                    Search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+                    ChevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>,
+                    ChevronUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>,
+                    CheckCircle2: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+                    Map: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
+                    Cloud: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c3.037 0 5.5-2.463 5.5-5.5 0-2.77-2.053-5.06-4.73-5.437A7.002 7.002 0 0 0 5 8c0 .323.023.64.066.95C2.175 9.94 0 12.716 0 16c0 3.314 2.686 6 6 6h11.5"/></svg>,
+                    RefreshCw: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>,
+                    Calendar: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>,
+                    Image: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                };
+                return icons[name] || null;
+            };
+
             return (
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-4xl mx-auto">
@@ -227,12 +230,12 @@
                                     <h1 className="text-3xl font-black text-red-600 flex items-center justify-center md:justify-start gap-2">
                                         <Icon name="MapPin" className="text-red-600" size={32} /> 旅日足跡
                                     </h1>
-                                    <div className="flex gap-4 mt-2">
-                                        <button onClick={() => setShowSyncPanel(!showSyncPanel)} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500">
-                                            <Icon name="Cloud" size={14} /> {syncConfig.repo ? `已連結` : '尚未連結 GitHub'}
+                                    <div className="flex gap-4 mt-2 justify-center md:justify-start">
+                                        <button onClick={() => setShowSyncPanel(!showSyncPanel)} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">
+                                            <Icon name="Cloud" size={14} /> {syncConfig.repo ? `同步中` : '連結 GitHub'}
                                         </button>
-                                        <button onClick={() => setShowMap(!showMap)} className={`flex items-center gap-2 text-xs font-bold ${showMap ? 'text-red-600' : 'text-slate-400'} hover:text-red-500`}>
-                                            <Icon name="Map" size={14} /> {showMap ? '關閉地圖' : '開啟地圖模式'}
+                                        <button onClick={() => setShowMap(!showMap)} className={`flex items-center gap-2 text-xs font-bold ${showMap ? 'text-red-600' : 'text-slate-400'} hover:text-red-500 transition-colors`}>
+                                            <Icon name="Map" size={14} /> {showMap ? '關閉地圖' : '開啟地圖'}
                                         </button>
                                     </div>
                                 </div>
@@ -246,7 +249,7 @@
                                 <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-300">
                                     <input type="password" placeholder="GitHub Token" className="w-full p-2 text-xs rounded-lg border outline-none" value={syncConfig.token} onChange={(e) => setSyncConfig({...syncConfig, token: e.target.value})} />
                                     <input type="text" placeholder="Repo (帳號/名稱)" className="w-full p-2 text-xs rounded-lg border outline-none" value={syncConfig.repo} onChange={(e) => setSyncConfig({...syncConfig, repo: e.target.value})} />
-                                    <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full">儲存並同步資料</button>
+                                    <button onClick={() => { localStorage.setItem('japan_travel_sync_config', JSON.stringify(syncConfig)); fetchFromGitHub(); }} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg w-full">儲存並同步</button>
                                 </div>
                             )}
 
@@ -288,27 +291,27 @@
                                         </button>
 
                                         {(expandedCategories[category.id] || searchQuery) && (
-                                            <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50 font-sans">
+                                            <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50">
                                                 {category.items.map(item => {
                                                     const record = records[item];
                                                     return (
                                                         <div key={item} className={`p-4 rounded-2xl border transition-all ${record ? 'border-red-100 bg-red-50/20 shadow-sm' : 'border-slate-100 bg-white'}`}>
                                                             <div className="flex justify-between items-center">
                                                                 <div className="flex items-center gap-3">
-                                                                    <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
+                                                                    <button onClick={() => handleToggleVisit(item)} className={`transition-transform active:scale-90 ${record ? 'text-red-500' : 'text-slate-200 hover:text-slate-300'}`}><Icon name="CheckCircle2" className={record ? 'fill-red-50' : ''} size={28} /></button>
                                                                     <span className={`font-bold transition-colors ${record ? 'text-red-900' : 'text-slate-500'}`}>{item}</span>
                                                                 </div>
                                                                 {record && <button onClick={() => setEditingItem(editingItem === item ? null : item)} className="text-xs text-slate-400 underline font-medium">{editingItem === item ? '收起' : '編輯'}</button>}
                                                             </div>
-                                                            {record && !editingItem && record.imageUrl && <div className="mt-3 mb-2 rounded-xl overflow-hidden border aspect-video bg-slate-100 max-w-[240px]"><img src={record.imageUrl} alt={item} className="w-full h-full object-cover" /></div>}
+                                                            {record && !editingItem && record.imageUrl && <div className="mt-3 mb-2 rounded-xl overflow-hidden border aspect-video bg-slate-100 max-w-[240px] shadow-sm"><img src={record.imageUrl} alt={item} className="w-full h-full object-cover" /></div>}
                                                             {record && !editingItem && <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-10">
                                                                 {record.date && <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1"><Icon name="Calendar" size={14} /> {record.date}</div>}
                                                                 {record.albumUrl && <a href={record.albumUrl} target="_blank" className="text-[11px] font-bold text-red-500 flex items-center gap-1 underline decoration-red-200 underline-offset-2"><Icon name="Image" size={14} /> 相簿</a>}
                                                             </div>}
                                                             {record && editingItem === item && <div className="mt-4 space-y-3 p-3 bg-white rounded-xl border border-red-100 shadow-inner">
-                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1">造訪日期</label><input type="date" className="w-full bg-slate-50 p-2 rounded text-sm outline-none font-bold text-slate-700" value={record.date} onChange={(e) => { const r = {...records}; r[item].date = e.target.value; saveRecords(r); }} /></div>
-                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1">Snapshot 位址</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none font-medium" value={record.imageUrl} onChange={(e) => { const r = {...records}; r[item].imageUrl = e.target.value; saveRecords(r); }} /></div>
-                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1">相簿連結</label><input type="text" className="w-full bg-slate-50 p-2 rounded text-xs outline-none font-medium" value={record.albumUrl} onChange={(e) => { const r = {...records}; r[item].albumUrl = e.target.value; saveRecords(r); }} /></div>
+                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">日期</label><input type="date" className="w-full bg-slate-50 p-2 rounded text-sm outline-none font-bold text-slate-700" value={record.date} onChange={(e) => { const r = {...records}; r[item].date = e.target.value; saveRecords(r); }} /></div>
+                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase text-xs">Snapshot 網址</label><input type="text" placeholder="https://..." className="w-full bg-slate-50 p-2 rounded text-xs outline-none font-medium" value={record.imageUrl} onChange={(e) => { const r = {...records}; r[item].imageUrl = e.target.value; saveRecords(r); }} /></div>
+                                                                <div><label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase text-xs">相簿連結</label><input type="text" placeholder="https://photos.google.com/..." className="w-full bg-slate-50 p-2 rounded text-xs outline-none font-medium" value={record.albumUrl} onChange={(e) => { const r = {...records}; r[item].albumUrl = e.target.value; saveRecords(r); }} /></div>
                                                             </div>}
                                                         </div>
                                                     );
